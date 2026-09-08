@@ -1,0 +1,28 @@
+databases:
+  - name: iptms-db
+    plan: free
+    databaseName: iptms
+    user: iptms
+
+services:
+  - type: web
+    name: iptms
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: iptms-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SUPERADMIN_NAME
+        sync: false
+      - key: SUPERADMIN_EMAIL
+        sync: false
+      - key: SUPERADMIN_PASSWORD
+        sync: false

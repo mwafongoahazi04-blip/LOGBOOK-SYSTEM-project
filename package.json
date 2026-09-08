@@ -1,0 +1,26 @@
+{
+  "name": "iptms",
+  "version": "1.0.0",
+  "description": "Industrial Practical Training Management System (IPTMS) — full backend + frontend, hardened for production hosting on Render.",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "NODE_ENV=development node server/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^9.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "express-session": "^1.18.0",
+    "helmet": "^7.1.0",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}
