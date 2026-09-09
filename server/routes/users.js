@@ -17,8 +17,10 @@ router.use(requireRole("superadmin"));
 
 router.get("/", async (req, res) => {
   const { rows } = await pool.query(
-    "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC"
+    "SELECT id, name, email, role, signature, created_at FROM users ORDER BY created_at DESC"
   );
+  res.json({ users: rows });
+});
   res.json({ users: rows });
 });
 
