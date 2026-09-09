@@ -57,6 +57,16 @@ function mountSignaturePad(container, onChange) {
       </div>
     </div>`;
   const canvas = container.querySelector("canvas");
+   const uploadMount = document.createElement("div");
+uploadMount.className = "field";
+uploadMount.innerHTML = `
+  <label>Or upload signature</label>
+`;
+document.querySelector("#registerPane").appendChild(uploadMount);
+
+mountSignatureUpload(uploadMount, value => {
+  if(value) sig = value;
+});
   const ctx = canvas.getContext("2d");
   let drawing = false, hasInk = false;
 
