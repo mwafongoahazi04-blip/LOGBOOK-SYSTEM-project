@@ -47,104 +47,185 @@ async function api(path, { method = "GET", body } = {}) {
 }
 
 /* ---------------- signature pad ---------------- */
+
 function mountSignaturePad(container, onChange) {
+  if (!container) return;
+
   container.innerHTML = `
     <div class="pad-wrap">
       <canvas></canvas>
+
       <div class="pad-controls">
         <span>Chora saini hapa juu kwa kidole/mouse</span>
-        <a href="#" data-clear style="color:var(--red); text-decoration:none; font-weight:600;">Futa</a>
+        <a
+          href="#"
+          data-clear
+          style="color:var(--red); text-decoration:none; font-weight:600;"
+        >
+          Futa
+        </a>
       </div>
-    </div>`;
-  const canvas = container.querySelector("canvas");
-   const uploadMount = document.createElement("div");
-uploadMount.className = "field";
-uploadMount.innerHTML = `
-  <label>Or upload signature</label>
-`;
-document.querySelector("#registerPane").appendChild(uploadMount);
+    </div>
+  `;
 
-mountSignatureUpload(uploadMount, value => {
-  if(value) sig = value;
-});
+  const canvas = container.querySelector("canvas");
   const ctx = canvas.getContext("2d");
-  let drawing = false, hasInk = false;
+
+  let drawing = false;
+  let hasInk = false;
 
   function fitCanvas() {
     const rect = canvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
+
     canvas.width = rect.width * ratio;
     canvas.height = 120 * ratio;
+
+    canvas.style.height = "120px";
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(ratio, ratio);
-    ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#1B2430";
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#1B2430";
   }
+
   fitCanvas();
 
   function pos(e) {
     const rect = canvas.getBoundingClientRect();
-    const p = e.touches ? e.touches[0] : e;
-    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+    const point = e.touches ? e.touches[0] : e;
+
+    return {
+      x: point.clientX - rect.left,
+      y: point.clientY - rect.top,
+    };
   }
-  function start(e) { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }
-  function move(e) { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasInk = true; e.preventDefault(); }
-  function end() { if (drawing) { drawing = false; onChange(hasInk ? canvas.toDataURL("image/png") : null); } }
+
+  function start(e) {
+    drawing = true;
+
+    const point = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+
+    e.preventDefault();
+  }
+
+  function move(e) {
+    if (!drawing) return;
+
+    const point = pos(e);
+
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+
+    hasInk = true;
+
+    e.preventDefault();
+  }
+
+  function end() {
+    if (!drawing) return;
+
+    drawing = false;
+
+    onChange(
+      hasInk ? canvas.toDataURL("image/png") : null
+    );
+  }
 
   canvas.addEventListener("mousedown", start);
   canvas.addEventListener("mousemove", move);
   window.addEventListener("mouseup", end);
-  canvas.addEventListener("touchstart", start);
-  canvas.addEventListener("touchmove", move);
+
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", move, { passive: false });
   canvas.addEventListener("touchend", end);
 
   container.querySelector("[data-clear]").onclick = (e) => {
     e.preventDefault();
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     hasInk = false;
     onChange(null);
   };
+
+  window.addEventListener("resize", fitCanvas);
 }
-function mountSignatureUpload(container, onChange){
-  if(!container) return;
+
+
+function mountSignatureUpload(container, onChange) {
+  if (!container) return;
 
   container.innerHTML = `
     <div class="sig-upload">
       <label>Upload signature image</label>
+
       <input
         type="file"
         accept="image/png,image/jpeg,image/webp"
         data-signature-file
       >
+
       <div class="upload-hint">
-        Chagua picha ya signature yako. PNG yenye background transparent inapendekezwa.
+        Chagua picha ya signature yako.
+        PNG yenye background transparent inapendekezwa.
       </div>
-      <div class="sig-upload-preview" data-signature-preview hidden>
-        <img data-signature-image alt="Signature preview">
-        <button type="button" data-remove-signature>
+
+      <div
+        class="sig-upload-preview"
+        data-signature-preview
+        hidden
+      >
+        <img
+          data-signature-image
+          alt="Signature preview"
+        >
+
+        <button
+          type="button"
+          data-remove-signature
+        >
           Remove
         </button>
       </div>
     </div>
   `;
 
-  const fileInput = container.querySelector("[data-signature-file]");
-  const preview = container.querySelector("[data-signature-preview]");
-  const image = container.querySelector("[data-signature-image]");
-  const removeBtn = container.querySelector("[data-remove-signature]");
+  const fileInput = container.querySelector(
+    "[data-signature-file]"
+  );
+
+  const preview = container.querySelector(
+    "[data-signature-preview]"
+  );
+
+  const image = container.querySelector(
+    "[data-signature-image]"
+  );
+
+  const removeBtn = container.querySelector(
+    "[data-remove-signature]"
+  );
 
   fileInput.addEventListener("change", () => {
     const file = fileInput.files?.[0];
 
-    if(!file){
+    if (!file) {
       onChange(null);
       preview.hidden = true;
       return;
     }
 
-    if(!file.type.startsWith("image/")){
+    if (!file.type.startsWith("image/")) {
       fileInput.value = "";
       onChange(null);
       preview.hidden = true;
-      alert("Tafadhali chagua picha ya signature.");
+      toast("Tafadhali chagua picha ya signature.");
       return;
     }
 
@@ -152,8 +233,10 @@ function mountSignatureUpload(container, onChange){
 
     reader.onload = () => {
       const dataUrl = reader.result;
+
       image.src = dataUrl;
       preview.hidden = false;
+
       onChange(dataUrl);
     };
 
@@ -164,43 +247,9 @@ function mountSignatureUpload(container, onChange){
     fileInput.value = "";
     image.removeAttribute("src");
     preview.hidden = true;
+
     onChange(null);
   });
-}
-
-  const input = container.querySelector("[data-signature-file]");
-  const preview = container.querySelector("[data-signature-preview]");
-  const img = container.querySelector("[data-signature-img]");
-  const removeBtn = container.querySelector("[data-remove-signature]");
-
-  input.onchange = () => {
-    const file = input.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      input.value = "";
-      toast("Tafadhali chagua picha ya signature.");
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      img.src = dataUrl;
-      preview.style.display = "block";
-      onChange(dataUrl);
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  removeBtn.onclick = () => {
-    input.value = "";
-    img.src = "";
-    preview.style.display = "none";
-    onChange(null);
-  };
 }
 
 /* ---------------- auth screens ---------------- */
@@ -357,8 +406,12 @@ function statusChip(e) {
 }
 
 function sigBox(label, sig, signedAt) {
-  if (sig) return `<div class="sig-box signed"><b>${label}</b><br>${fmt(signedAt)}<img src="${sig}"></div>`;
-  return `<div class="sig-box">${label} — bado hujathibitishwa</div>`;
+ if (!sig) {
+  setAuthMsg(
+    "Tafadhali chora au pakia picha ya signature yako kwanza."
+  );
+  return;
+}
 }
 
 // Renders the "confirm sign with my saved signature" panel used at every
@@ -697,8 +750,12 @@ mountSignatureUpload(document.getElementById("nu_sigupload"), (dataUrl) => {
   sig = dataUrl;
 });
   document.getElementById("addUserBtn").onclick = async () => {
-    if (!sig) { toast("Chora saini ya mtumiaji kwanza."); return; }
-    try {
+   if (!sig) {
+  toast(
+    "Chora au pakia picha ya signature ya mtumiaji kwanza."
+  );
+  return;
+} try {
       await api("/users", { method: "POST", body: {
         name: document.getElementById("nu_name").value.trim(),
         email: document.getElementById("nu_email").value.trim(),
