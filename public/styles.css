@@ -122,3 +122,102 @@ tr:last-child td{border-bottom:none;}
 .auth-msg{font-size:13px; color:var(--red); min-height:18px; margin-top:6px;}
 .auth-msg.ok{color:var(--teal);}
 .helptext{font-size:11.5px; color:#8A939C; margin-top:-8px; margin-bottom:12px;}
+/* ---- Signature upload ---- */
+.sig-upload{
+  border:1px dashed var(--line);
+  border-radius:8px;
+  background:#FCFBF8;
+  padding:12px;
+  margin-top:10px;
+}
+
+.sig-upload label{
+  display:block;
+  font-size:12.5px;
+  color:#5C6672;
+  margin-bottom:7px;
+  font-weight:600;
+}
+
+.sig-upload input[type=file]{
+  width:100%;
+  font-family:var(--sans);
+  font-size:13px;
+  color:var(--ink);
+}
+
+.sig-upload .upload-hint{
+  font-size:11.5px;
+  color:#8A939C;
+  margin-top:7px;
+  line-height:1.4;
+}
+
+.sig-upload-preview{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+}
+
+.sig-upload-preview img{
+  display:block;
+  max-width:180px;
+  height:60px;
+  object-fit:contain;
+  border:1px dashed var(--line);
+  border-radius:5px;
+  background:#fff;
+  padding:4px;
+}
+
+.sig-upload-preview button{
+  border:1px solid var(--line);
+  background:none;
+  color:var(--red);
+  border-radius:6px;
+  padding:6px 9px;
+  cursor:pointer;
+  font-family:var(--sans);
+  font-size:12px;
+}
+
+.sig-upload-preview button:hover{
+  background:var(--red-light);
+}
+
+.user-signature{
+  display:block;
+  width:110px;
+  height:42px;
+  object-fit:contain;
+  background:#fff;
+  border:1px dashed var(--line);
+  border-radius:5px;
+  padding:3px;
+}
+
+@media (max-width:600px){
+  .auth-card{
+    padding:22px 18px;
+  }
+
+  .sig-upload-preview{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .sig-upload-preview img{
+    max-width:100%;
+  }
+
+  table{
+    display:block;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+}
