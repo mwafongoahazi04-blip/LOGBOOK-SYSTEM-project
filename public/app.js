@@ -93,6 +93,57 @@ function mountSignaturePad(container, onChange) {
     onChange(null);
   };
 }
+/* ---------------- signature upload ---------------- */
+function mountSignatureUpload(container, onChange) {
+  container.innerHTML = `
+    <div class="sig-upload">
+      <input type="file" accept="image/png,image/jpeg,image/webp" data-signature-file>
+      <div class="sig-upload-preview" data-signature-preview style="display:none;">
+        <img data-signature-img alt="Signature iliyopakiwa">
+        <button type="button" class="btn btn-ghost" data-remove-signature>
+          Ondoa picha
+        </button>
+      </div>
+      <div class="helptext">
+        Chagua picha ya signature yako. PNG yenye background transparent inapendekezwa.
+      </div>
+    </div>
+  `;
+
+  const input = container.querySelector("[data-signature-file]");
+  const preview = container.querySelector("[data-signature-preview]");
+  const img = container.querySelector("[data-signature-img]");
+  const removeBtn = container.querySelector("[data-remove-signature]");
+
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      input.value = "";
+      toast("Tafadhali chagua picha ya signature.");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      img.src = dataUrl;
+      preview.style.display = "block";
+      onChange(dataUrl);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  removeBtn.onclick = () => {
+    input.value = "";
+    img.src = "";
+    preview.style.display = "none";
+    onChange(null);
+  };
+}
 
 /* ---------------- auth screens ---------------- */
 function showAuth() {
@@ -155,14 +206,28 @@ function renderRegisterPane() {
     </div>
     <div class="helptext">Head of Faculty na Superadmin huundwa na Superadmin pekee.</div>
     <div class="field"><label>Password (herufi 8+, angalau namba moja)</label><input type="password" id="re_password" placeholder="••••••••"></div>
-    <div class="field">
-      <label>Saini Yako ya Kudumu — itatumika kila utakaposaini nyaraka</label>
-      <div id="re_sigmount"></div>
-    </div>
+  <div class="field">
+  <label>Saini Yako ya Kudumu — itatumika kila utakaposaini nyaraka</label>
+
+  <div id="re_sigmount"></div>
+
+  <div class="signature-option-label">
+    Au pakia picha ya signature yako
+  </div>
+
+  <div id="re_sigupload"></div>
+</div>
     <button class="btn btn-teal" id="re_submit" style="width:100%; justify-content:center;">Jisajili</button>
   `;
-  let sig = null;
-  mountSignaturePad(document.getElementById("re_sigmount"), (dataUrl) => { sig = dataUrl; });
+ let sig = null;
+
+mountSignaturePad(document.getElementById("re_sigmount"), (dataUrl) => {
+  sig = dataUrl;
+});
+
+mountSignatureUpload(document.getElementById("re_sigupload"), (dataUrl) => {
+  sig = dataUrl;
+});
   document.getElementById("re_submit").onclick = async () => {
     const name = document.getElementById("re_name").value.trim();
     const email = document.getElementById("re_email").value.trim();
@@ -549,13 +614,30 @@ VIEWS["superadmin:users"] = async (main) => {
         <div class="field"><label>Role</label><select id="nu_role">${ADMIN_ROLES.map(r => `<option value="${r.id}">${r.label}</option>`).join("")}</select></div>
         <div class="field"><label>Password ya Awali</label><input type="password" id="nu_password" placeholder="herufi 8+, namba moja"></div>
       </div>
-      <div class="field"><label>Saini ya Mtumiaji</label><div id="nu_sigmount"></div></div>
+     <div class="field">
+  <label>Saini ya Mtumiaji</label>
+
+  <div id="nu_sigmount"></div>
+
+  <div class="signature-option-label">
+    Au pakia picha ya signature
+  </div>
+
+  <div id="nu_sigupload"></div>
+</div>
       <button class="btn btn-teal" id="addUserBtn">Ongeza Mtumiaji</button>
     </div>
     <div class="card"><h3>Orodha ya Watumiaji</h3><div id="userTable" class="empty">Inapakia…</div></div>
   `;
-  let sig = null;
-  mountSignaturePad(document.getElementById("nu_sigmount"), (d) => { sig = d; });
+let sig = null;
+
+mountSignaturePad(document.getElementById("nu_sigmount"), (d) => {
+  sig = d;
+});
+
+mountSignatureUpload(document.getElementById("nu_sigupload"), (dataUrl) => {
+  sig = dataUrl;
+});
   document.getElementById("addUserBtn").onclick = async () => {
     if (!sig) { toast("Chora saini ya mtumiaji kwanza."); return; }
     try {
