@@ -93,22 +93,70 @@ function mountSignaturePad(container, onChange) {
     onChange(null);
   };
 }
-/* ---------------- signature upload ---------------- */
-function mountSignatureUpload(container, onChange) {
+function mountSignatureUpload(container, onChange){
+  if(!container) return;
+
   container.innerHTML = `
     <div class="sig-upload">
-      <input type="file" accept="image/png,image/jpeg,image/webp" data-signature-file>
-      <div class="sig-upload-preview" data-signature-preview style="display:none;">
-        <img data-signature-img alt="Signature iliyopakiwa">
-        <button type="button" class="btn btn-ghost" data-remove-signature>
-          Ondoa picha
-        </button>
-      </div>
-      <div class="helptext">
+      <label>Upload signature image</label>
+      <input
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        data-signature-file
+      >
+      <div class="upload-hint">
         Chagua picha ya signature yako. PNG yenye background transparent inapendekezwa.
+      </div>
+      <div class="sig-upload-preview" data-signature-preview hidden>
+        <img data-signature-image alt="Signature preview">
+        <button type="button" data-remove-signature>
+          Remove
+        </button>
       </div>
     </div>
   `;
+
+  const fileInput = container.querySelector("[data-signature-file]");
+  const preview = container.querySelector("[data-signature-preview]");
+  const image = container.querySelector("[data-signature-image]");
+  const removeBtn = container.querySelector("[data-remove-signature]");
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+
+    if(!file){
+      onChange(null);
+      preview.hidden = true;
+      return;
+    }
+
+    if(!file.type.startsWith("image/")){
+      fileInput.value = "";
+      onChange(null);
+      preview.hidden = true;
+      alert("Tafadhali chagua picha ya signature.");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      image.src = dataUrl;
+      preview.hidden = false;
+      onChange(dataUrl);
+    };
+
+    reader.readAsDataURL(file);
+  });
+
+  removeBtn.addEventListener("click", () => {
+    fileInput.value = "";
+    image.removeAttribute("src");
+    preview.hidden = true;
+    onChange(null);
+  });
+}
 
   const input = container.querySelector("[data-signature-file]");
   const preview = container.querySelector("[data-signature-preview]");
