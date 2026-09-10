@@ -21,9 +21,7 @@ router.get("/", async (req, res) => {
   );
   res.json({ users: rows });
 });
-  res.json({ users: rows });
-});
-
+ 
 // Superadmin can create a user of ANY role (including faculty/superadmin),
 // which is how those admin-only roles get onboarded. A signature and a
 // temporary password are required up front so the account is fully usable
