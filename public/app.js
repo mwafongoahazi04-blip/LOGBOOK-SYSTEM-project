@@ -341,7 +341,7 @@ mountSignatureUpload(document.getElementById("re_sigupload"), (dataUrl) => {
     const role = document.getElementById("re_role").value;
     const password = document.getElementById("re_password").value;
     setAuthMsg("");
-    if (!sig) { setAuthMsg("Tafadhali chora saini yako kwanza."); return; }
+    if (!sig) { setAuthMsg("Tafadhali chora au pakia picha ya signature yako kwanza."); return; }
     try {
       const data = await api("/auth/register", { method: "POST", body: { name, email, password, role, signature: sig } });
       state.csrfToken = data.csrfToken;
@@ -714,76 +714,217 @@ const ADMIN_ROLES = [
 
 VIEWS["superadmin:users"] = async (main) => {
   main.innerHTML = `
-    <div class="page-head"><div class="eyebrow">USER MANAGEMENT</div><h2>Watumiaji wa Mfumo</h2><p>Ongeza au futa akaunti za watumiaji wa mfumo. Kila akaunti mpya lazima iwe na saini yake.</p></div>
+    <div class="page-head">
+      <div class="eyebrow">USER MANAGEMENT</div>
+      <h2>Watumiaji wa Mfumo</h2>
+      <p>
+        Ongeza au futa akaunti za watumiaji wa mfumo.
+        Kila akaunti mpya lazima iwe na saini yake.
+      </p>
+    </div>
+
     <div class="card">
       <h3>Ongeza Mtumiaji Mpya</h3>
+
       <div class="grid2">
-        <div class="field"><label>Jina</label><input type="text" id="nu_name"></div>
-        <div class="field"><label>Barua Pepe</label><input type="email" id="nu_email"></div>
+        <div class="field">
+          <label>Jina</label>
+          <input type="text" id="nu_name">
+        </div>
+
+        <div class="field">
+          <label>Barua Pepe</label>
+          <input type="email" id="nu_email">
+        </div>
       </div>
+
       <div class="grid2">
-        <div class="field"><label>Role</label><select id="nu_role">${ADMIN_ROLES.map(r => `<option value="${r.id}">${r.label}</option>`).join("")}</select></div>
-        <div class="field"><label>Password ya Awali</label><input type="password" id="nu_password" placeholder="herufi 8+, namba moja"></div>
+        <div class="field">
+          <label>Role</label>
+          <select id="nu_role">
+            ${ADMIN_ROLES.map(
+              (r) =>
+                `<option value="${r.id}">${r.label}</option>`
+            ).join("")}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Password ya Awali</label>
+          <input
+            type="password"
+            id="nu_password"
+            placeholder="herufi 8+, namba moja"
+          >
+        </div>
       </div>
-     <div class="field">
-  <label>Saini ya Mtumiaji</label>
 
-  <div id="nu_sigmount"></div>
+      <div class="field">
+        <label>Saini ya Mtumiaji</label>
 
-  <div class="signature-option-label">
-    Au pakia picha ya signature
-  </div>
+        <div id="nu_sigmount"></div>
 
-  <div id="nu_sigupload"></div>
-</div>
-      <button class="btn btn-teal" id="addUserBtn">Ongeza Mtumiaji</button>
+        <div class="signature-option-label">
+          Au pakia picha ya signature
+        </div>
+
+        <div id="nu_sigupload"></div>
+      </div>
+
+      <button class="btn btn-teal" id="addUserBtn">
+        Ongeza Mtumiaji
+      </button>
     </div>
-    <div class="card"><h3>Orodha ya Watumiaji</h3><div id="userTable" class="empty">Inapakia…</div></div>
+
+    <div class="card">
+      <h3>Orodha ya Watumiaji</h3>
+      <div id="userTable" class="empty">
+        Inapakia…
+      </div>
+    </div>
   `;
-let sig = null;
 
-mountSignaturePad(document.getElementById("nu_sigmount"), (d) => {
-  sig = d;
-});
+  let sig = null;
 
-mountSignatureUpload(document.getElementById("nu_sigupload"), (dataUrl) => {
-  sig = dataUrl;
-});
-  document.getElementById("addUserBtn").onclick = async () => {
-   if (!sig) {
-  toast(
-    "Chora au pakia picha ya signature ya mtumiaji kwanza."
+  mountSignaturePad(
+    document.getElementById("nu_sigmount"),
+    (dataUrl) => {
+      sig = dataUrl;
+    }
   );
-  return;
-} try {
-      await api("/users", { method: "POST", body: {
-        name: document.getElementById("nu_name").value.trim(),
-        email: document.getElementById("nu_email").value.trim(),
-        role: document.getElementById("nu_role").value,
-        password: document.getElementById("nu_password").value,
-        signature: sig,
-      }});
+
+  mountSignatureUpload(
+    document.getElementById("nu_sigupload"),
+    (dataUrl) => {
+      sig = dataUrl;
+    }
+  );
+
+  document.getElementById("addUserBtn").onclick = async () => {
+    if (!sig) {
+      toast(
+        "Chora au pakia picha ya signature ya mtumiaji kwanza."
+      );
+      return;
+    }
+
+    const name = document
+      .getElementById("nu_name")
+      .value
+      .trim();
+
+    const email = document
+      .getElementById("nu_email")
+      .value
+      .trim();
+
+    const role = document
+      .getElementById("nu_role")
+      .value;
+
+    const password = document
+      .getElementById("nu_password")
+      .value;
+
+    if (!name || !email || !password) {
+      toast("Jaza jina, barua pepe na password kwanza.");
+      return;
+    }
+
+    try {
+      await api("/users", {
+        method: "POST",
+        body: {
+          name,
+          email,
+          role,
+          password,
+          signature: sig,
+        },
+      });
+
       toast("Mtumiaji ameongezwa.");
+
       renderMain();
-    } catch (e) { toast(e.message); }
+    } catch (e) {
+      toast(e.message);
+    }
   };
+
   const { users } = await api("/users");
+
   const t = document.getElementById("userTable");
+
   t.className = "";
-  t.innerHTML = `<table><tr><th>Jina</th><th>Barua Pepe</th><th>Role</th><th></th></tr>
-    ${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td class="mono">${escapeHtml(u.email)}</td><td class="mono">${ROLE_LABEL[u.role] || u.role}</td>
-      <td><a href="#" class="delUser" data-id="${u.id}" style="color:var(--red); text-decoration:none; font-size:12.5px; font-weight:600;">Futa</a></td></tr>`).join("")}
-  </table>`;
-  t.querySelectorAll(".delUser").forEach(a => {
+
+  t.innerHTML = `
+    <table>
+      <tr>
+        <th>Jina</th>
+        <th>Barua Pepe</th>
+        <th>Role</th>
+        <th></th>
+      </tr>
+
+      ${users
+        .map(
+          (u) => `
+            <tr>
+              <td>${escapeHtml(u.name)}</td>
+              <td class="mono">
+                ${escapeHtml(u.email)}
+              </td>
+              <td class="mono">
+                ${ROLE_LABEL[u.role] || u.role}
+              </td>
+              <td>
+                <a
+                  href="#"
+                  class="delUser"
+                  data-id="${u.id}"
+                  style="
+                    color:var(--red);
+                    text-decoration:none;
+                    font-size:12.5px;
+                    font-weight:600;
+                  "
+                >
+                  Futa
+                </a>
+              </td>
+            </tr>
+          `
+        )
+        .join("")}
+    </table>
+  `;
+
+  t.querySelectorAll(".delUser").forEach((a) => {
     a.onclick = async (e) => {
       e.preventDefault();
-      if (!confirm("Una uhakika unataka kumfuta mtumiaji huyu?")) return;
-      try { await api(`/users/${a.dataset.id}`, { method: "DELETE" }); toast("Mtumiaji amefutwa."); renderMain(); }
-      catch (err) { toast(err.message); }
+
+      if (
+        !confirm(
+          "Una uhakika unataka kumfuta mtumiaji huyu?"
+        )
+      ) {
+        return;
+      }
+
+      try {
+        await api(`/users/${a.dataset.id}`, {
+          method: "DELETE",
+        });
+
+        toast("Mtumiaji amefutwa.");
+
+        renderMain();
+      } catch (err) {
+        toast(err.message);
+      }
     };
   });
 };
-
 VIEWS["superadmin:audit"] = async (main) => {
   const { audit } = await api("/audit");
   main.innerHTML = `
