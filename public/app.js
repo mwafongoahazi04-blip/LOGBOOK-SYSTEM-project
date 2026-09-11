@@ -323,9 +323,34 @@ function signPanel(mySignature, btnLabel, onConfirm) {
   wrap.innerHTML = `
     <label>Saini Yako Iliyohifadhiwa</label>
     ${hasSignature ? `<div class="sig-preview"><img src="${mySignature}" alt="Saini yako"><div class="hint">Saini hii ndiyo iliyohifadhiwa kwenye akaunti yako.</div></div>` : `<div class="empty" style="margin:0;">Hujahifadhi signature. Nenda Wasifu Wangu na uhifadhi signature kwanza.</div>`}
-    <button class="btn btn-teal" style="margin-top:10px;" ${hasSignature ? "" : "disabled"}>${btnLabel}</button>
+    <button type="button" class="btn btn-teal" style="margin-top:10px;" ${hasSignature ? "" : "disabled"}>${btnLabel}</button>
   `;
-  wrap.querySelector("button").onclick = onConfirm;
+
+  const button = wrap.querySelector("button");
+  const originalLabel = btnLabel;
+
+  button.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!hasSignature || button.disabled) return;
+
+    button.disabled = true;
+    button.textContent = "Inasaini...";
+
+    try {
+      await onConfirm();
+    } catch (err) {
+      console.error("Signing error:", err);
+      toast(err?.message || "Imeshindikana kusaini. Jaribu tena.");
+    } finally {
+      // renderMain() may replace this button after success.
+      if (document.body.contains(button)) {
+        button.disabled = false;
+        button.textContent = originalLabel;
+      }
+    }
+  });
+
   return wrap;
 }
 
