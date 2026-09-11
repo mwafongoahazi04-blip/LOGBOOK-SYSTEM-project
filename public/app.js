@@ -599,13 +599,13 @@ VIEWS["faculty:final"] = async (main) => {
       list.appendChild(card);
     });
   }
-  main.innerHTML += `<h3 style="font-size:14px; margin-top:22px;">Zilizokamilika</h3>` +
+  main.insertAdjacentHTML("beforeend", `<h3 style="font-size:14px; margin-top:22px;">Zilizokamilika</h3>` +
     (done.logbooks.length === 0 ? `<div class="empty">Bado hakuna iliyokamilika.</div>` : done.logbooks.map(e => `
       <div class="entry" data-id="${e.id}">
         <div class="entry-top"><div class="who">${escapeHtml(e.student_name)} — ${e.entry_date}</div>${statusChip(e)}</div>
         <div class="entry-body" style="margin-top:8px;"><span class="print-badge ${e.print_enabled ? "print-on" : "print-off"}">🖶 ${e.print_enabled ? "Print Enabled" : "Print Imezuiwa"}</span></div>
         <button class="btn btn-ghost togglePrint" data-id="${e.id}" style="margin-top:10px;">${e.print_enabled ? "Zuia Printing" : "Ruhusu Printing"}</button>
-      </div>`).join(""));
+      </div>`).join("")));
   main.querySelectorAll(".togglePrint").forEach(btn => {
     btn.onclick = async () => {
       try { await api(`/logbooks/${btn.dataset.id}/print-toggle`, { method: "POST" }); renderMain(); }
