@@ -47,185 +47,94 @@ async function api(path, { method = "GET", body } = {}) {
 }
 
 /* ---------------- signature pad ---------------- */
-
 function mountSignaturePad(container, onChange) {
-  if (!container) return;
-
   container.innerHTML = `
     <div class="pad-wrap">
       <canvas></canvas>
-
       <div class="pad-controls">
         <span>Chora saini hapa juu kwa kidole/mouse</span>
-        <a
-          href="#"
-          data-clear
-          style="color:var(--red); text-decoration:none; font-weight:600;"
-        >
-          Futa
-        </a>
+        <a href="#" data-clear style="color:var(--red); text-decoration:none; font-weight:600;">Futa</a>
       </div>
-    </div>
-  `;
-
+    </div>`;
   const canvas = container.querySelector("canvas");
   const ctx = canvas.getContext("2d");
-
-  let drawing = false;
-  let hasInk = false;
+  let drawing = false, hasInk = false;
 
   function fitCanvas() {
     const rect = canvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
-
     canvas.width = rect.width * ratio;
     canvas.height = 120 * ratio;
-
-    canvas.style.height = "120px";
-
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(ratio, ratio);
-
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#1B2430";
+    ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.strokeStyle = "#1B2430";
   }
-
   fitCanvas();
 
   function pos(e) {
     const rect = canvas.getBoundingClientRect();
-    const point = e.touches ? e.touches[0] : e;
-
-    return {
-      x: point.clientX - rect.left,
-      y: point.clientY - rect.top,
-    };
+    const p = e.touches ? e.touches[0] : e;
+    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
   }
-
-  function start(e) {
-    drawing = true;
-
-    const point = pos(e);
-    ctx.beginPath();
-    ctx.moveTo(point.x, point.y);
-
-    e.preventDefault();
-  }
-
-  function move(e) {
-    if (!drawing) return;
-
-    const point = pos(e);
-
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-
-    hasInk = true;
-
-    e.preventDefault();
-  }
-
-  function end() {
-    if (!drawing) return;
-
-    drawing = false;
-
-    onChange(
-      hasInk ? canvas.toDataURL("image/png") : null
-    );
-  }
+  function start(e) { drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }
+  function move(e) { if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); hasInk = true; e.preventDefault(); }
+  function end() { if (drawing) { drawing = false; onChange(hasInk ? canvas.toDataURL("image/png") : null); } }
 
   canvas.addEventListener("mousedown", start);
   canvas.addEventListener("mousemove", move);
   window.addEventListener("mouseup", end);
-
-  canvas.addEventListener("touchstart", start, { passive: false });
-  canvas.addEventListener("touchmove", move, { passive: false });
+  canvas.addEventListener("touchstart", start);
+  canvas.addEventListener("touchmove", move);
   canvas.addEventListener("touchend", end);
 
   container.querySelector("[data-clear]").onclick = (e) => {
     e.preventDefault();
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     hasInk = false;
     onChange(null);
   };
-
-  window.addEventListener("resize", fitCanvas);
 }
-
-
-function mountSignatureUpload(container, onChange) {
-  if (!container) return;
+function mountSignatureUpload(container, onChange){
+  if(!container) return;
 
   container.innerHTML = `
     <div class="sig-upload">
       <label>Upload signature image</label>
-
       <input
         type="file"
         accept="image/png,image/jpeg,image/webp"
         data-signature-file
       >
-
       <div class="upload-hint">
-        Chagua picha ya signature yako.
-        PNG yenye background transparent inapendekezwa.
+        Chagua picha ya signature yako. PNG yenye background transparent inapendekezwa.
       </div>
-
-      <div
-        class="sig-upload-preview"
-        data-signature-preview
-        hidden
-      >
-        <img
-          data-signature-image
-          alt="Signature preview"
-        >
-
-        <button
-          type="button"
-          data-remove-signature
-        >
+      <div class="sig-upload-preview" data-signature-preview hidden>
+        <img data-signature-image alt="Signature preview">
+        <button type="button" data-remove-signature>
           Remove
         </button>
       </div>
     </div>
   `;
 
-  const fileInput = container.querySelector(
-    "[data-signature-file]"
-  );
-
-  const preview = container.querySelector(
-    "[data-signature-preview]"
-  );
-
-  const image = container.querySelector(
-    "[data-signature-image]"
-  );
-
-  const removeBtn = container.querySelector(
-    "[data-remove-signature]"
-  );
+  const fileInput = container.querySelector("[data-signature-file]");
+  const preview = container.querySelector("[data-signature-preview]");
+  const image = container.querySelector("[data-signature-image]");
+  const removeBtn = container.querySelector("[data-remove-signature]");
 
   fileInput.addEventListener("change", () => {
     const file = fileInput.files?.[0];
 
-    if (!file) {
+    if(!file){
       onChange(null);
       preview.hidden = true;
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
+    if(!file.type.startsWith("image/")){
       fileInput.value = "";
       onChange(null);
       preview.hidden = true;
-      toast("Tafadhali chagua picha ya signature.");
+      alert("Tafadhali chagua picha ya signature.");
       return;
     }
 
@@ -233,10 +142,8 @@ function mountSignatureUpload(container, onChange) {
 
     reader.onload = () => {
       const dataUrl = reader.result;
-
       image.src = dataUrl;
       preview.hidden = false;
-
       onChange(dataUrl);
     };
 
@@ -247,7 +154,6 @@ function mountSignatureUpload(container, onChange) {
     fileInput.value = "";
     image.removeAttribute("src");
     preview.hidden = true;
-
     onChange(null);
   });
 }
@@ -406,29 +312,30 @@ function statusChip(e) {
 }
 
 function sigBox(label, sig, signedAt) {
- if (!sig) {
-  setAuthMsg(
-    "Tafadhali chora au pakia picha ya signature yako kwanza."
-  );
-  return;
-}
+  if (!sig) return `<div class="sig-box"><b>${escapeHtml(label)}</b><br><span class="hint">Bado hujathibitishwa</span></div>`;
+  return `<div class="sig-box signed"><b>${escapeHtml(label)}</b><br><span class="when">${fmt(signedAt)}</span><img src="${sig}" alt="${escapeHtml(label)}"></div>`;
 }
 
-// Renders the "confirm sign with my saved signature" panel used at every
-// approval step, instead of a fresh drawing pad each time.
 function signPanel(mySignature, btnLabel, onConfirm) {
   const wrap = document.createElement("div");
   wrap.className = "field";
+  const hasSignature = !!mySignature;
   wrap.innerHTML = `
     <label>Saini Yako Iliyohifadhiwa</label>
-    <div class="sig-preview">
-      <img src="${mySignature}" alt="Saini yako">
-      <div class="hint">Saini hii ilihifadhiwa unaposajili akaunti yako. Bonyeza kitufe kutumia saini hii kutia sahihi.</div>
-    </div>
-    <button class="btn btn-teal" style="margin-top:10px;">${btnLabel}</button>
+    ${hasSignature ? `<div class="sig-preview"><img src="${mySignature}" alt="Saini yako"><div class="hint">Saini hii ndiyo iliyohifadhiwa kwenye akaunti yako.</div></div>` : `<div class="empty" style="margin:0;">Hujahifadhi signature. Nenda Wasifu Wangu na uhifadhi signature kwanza.</div>`}
+    <button class="btn btn-teal" style="margin-top:10px;" ${hasSignature ? "" : "disabled"}>${btnLabel}</button>
   `;
   wrap.querySelector("button").onclick = onConfirm;
   return wrap;
+}
+
+function printLogbook(entry) {
+  if (!entry || !entry.print_enabled || !entry.faculty_sig) { toast("Logbook hii bado haijaruhusiwa kuchapishwa na Head of Faculty."); return; }
+  const popup = window.open("", "_blank", "width=900,height=700");
+  if (!popup) { toast("Ruhusu pop-up kwenye browser yako ili kuchapisha logbook."); return; }
+  const sig = (label, image, date) => image ? `<div class="signature"><div class="signature-title">${escapeHtml(label)}</div><img src="${image}" alt="${escapeHtml(label)}"><div class="date">${fmt(date)}</div></div>` : "";
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>IPTMS - Logbook ${escapeHtml(entry.entry_date)}</title><style>body{font-family:Arial,sans-serif;margin:35px;color:#111;line-height:1.5}h1{text-align:center;margin:0 0 4px}h2{text-align:center;margin:0 0 24px;font-size:18px;font-weight:normal}.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}.box{border:1px solid #ccc;border-radius:6px;padding:10px}.label{font-size:11px;text-transform:uppercase;color:#666;font-weight:bold}.content{border:1px solid #ccc;border-radius:6px;padding:14px;margin-bottom:14px;white-space:pre-wrap}.signatures{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}.signature{border:1px solid #ccc;min-height:125px;padding:10px;text-align:center}.signature-title{font-weight:bold;font-size:12px}.signature img{max-width:130px;max-height:60px;display:block;margin:8px auto}.date{font-size:10px;color:#666}@media print{body{margin:12mm}}</style></head><body><h1>INDUSTRIAL PRACTICAL TRAINING MANAGEMENT SYSTEM</h1><h2>DAILY LOGBOOK</h2><div class="meta"><div class="box"><div class="label">Mwanafunzi</div>${escapeHtml(entry.student_name)}</div><div class="box"><div class="label">Tarehe</div>${escapeHtml(entry.entry_date)}</div></div><div class="label">Kazi Iliyofanyika</div><div class="content">${escapeHtml(entry.activity)}</div><div class="label">Mambo Yaliyobainika / Changamoto</div><div class="content">${escapeHtml(entry.observations || "—")}</div><div class="label">Maoni ya Mwanafunzi</div><div class="content">${escapeHtml(entry.remarks || "—")}</div><div class="label">Tathmini ya University Supervisor</div><div class="content">${escapeHtml(entry.university_notes || "—")}</div><div class="label">Remarks za Head of Faculty</div><div class="content">${escapeHtml(entry.faculty_remarks || "—")}</div><div class="signatures">${sig("Mwanafunzi",entry.student_sig,entry.student_signed_at)}${sig("Industrial Supervisor",entry.industrial_sig,entry.industrial_signed_at)}${sig("University Supervisor",entry.university_sig,entry.university_signed_at)}${sig("Head of Faculty",entry.faculty_sig,entry.faculty_signed_at)}</div><p style="margin-top:25px;font-size:11px;color:#666">Imewezeshwa kwa printing na Head of Faculty.</p><script>window.onload=function(){window.focus();window.print();}</script></body></html>`);
+  popup.document.close();
 }
 
 /* ---------------- views ---------------- */
@@ -533,18 +440,9 @@ VIEWS["student:myperm"] = async (main) => {
 
 VIEWS["student:print"] = async (main) => {
   const { ready, notReady } = await api("/logbooks/printable");
-  main.innerHTML = `
-    <div class="page-head"><div class="eyebrow">PRINT CONTROL</div><h2>Chapisha / Print</h2><p>Unaweza kuchapisha baada tu ya Head of Faculty kuwasha "Enable Print".</p></div>
-    <h3 style="font-size:14px; margin-bottom:8px;">Tayari kuchapishwa</h3>
-    ${ready.length === 0 ? `<div class="empty">Hakuna logbook iliyoruhusiwa kuchapishwa bado.</div>` : ready.map(e => `
-      <div class="entry">
-        <div class="entry-top"><div class="who">${e.entry_date}</div><span class="print-badge print-on">🖶 Print Enabled</span></div>
-        <div class="entry-body"><span class="lbl">Kazi:</span> ${escapeHtml(e.activity)}</div>
-        <button class="btn btn-primary" style="margin-top:10px;" onclick="window.print()">Chapisha Sasa</button>
-      </div>`).join("")}
-    <h3 style="font-size:14px; margin:18px 0 8px;">Bado zinasubiri idhini</h3>
-    ${notReady.length === 0 ? `<div class="empty">Hakuna kingine kinachosubiri.</div>` : notReady.map(e => `<div class="entry"><div class="entry-top"><div class="who">${e.entry_date}</div>${statusChip(e)}</div></div>`).join("")}
-  `;
+  main.innerHTML = `<div class="page-head"><div class="eyebrow">PRINT CONTROL</div><h2>Chapisha / Print</h2><p>Logbook inaweza kuchapishwa tu baada ya hatua zote nne kukamilika na Head of Faculty kuruhusu printing.</p></div><h3 style="font-size:14px; margin-bottom:8px;">Tayari kuchapishwa</h3>${ready.length === 0 ? `<div class="empty">Hakuna logbook iliyoruhusiwa kuchapishwa bado.</div>` : ready.map(e => `<div class="entry"><div class="entry-top"><div><div class="who">${escapeHtml(e.entry_date)}</div><div class="when">${escapeHtml(e.student_name)}</div></div><span class="print-badge print-on">🖶 Print Enabled</span></div><div class="entry-body"><span class="lbl">Kazi:</span> ${escapeHtml(e.activity)}</div><button class="btn btn-primary printOne" data-id="${e.id}" style="margin-top:10px;">Chapisha Logbook Hii</button></div>`).join("")}<h3 style="font-size:14px; margin:18px 0 8px;">Bado zinasubiri idhini</h3>${notReady.length === 0 ? `<div class="empty">Hakuna nyingine inayosubiri.</div>` : notReady.map(e => `<div class="entry"><div class="entry-top"><div><div class="who">${escapeHtml(e.entry_date)}</div><div class="when">${escapeHtml(e.student_name)}</div></div>${statusChip(e)}</div></div>`).join("")}`;
+  const byId = new Map(ready.map(e => [String(e.id), e]));
+  main.querySelectorAll(".printOne").forEach(btn => { btn.onclick = () => printLogbook(byId.get(String(btn.dataset.id))); });
 };
 
 /* ---- INDUSTRIAL ---- */
@@ -663,7 +561,7 @@ VIEWS["faculty:final"] = async (main) => {
         <label style="display:flex; align-items:center; gap:8px; font-size:13.5px; margin-bottom:8px;">
           <input type="checkbox" class="enablePrint" style="width:auto;"> Ruhusu mwanafunzi kuchapisha (Enable Print) mara moja
         </label>`;
-      card.appendChild(signPanel(signature, "Sanya Idhini ya Mwisho", async () => {
+      card.appendChild(signPanel(signature, "Saini Idhini ya Mwisho", async () => {
         try {
           await api(`/logbooks/${e.id}/faculty-sign`, { method: "POST", body: {
             remarks: card.querySelector(".facRemarks").value.trim(),
@@ -714,217 +612,72 @@ const ADMIN_ROLES = [
 
 VIEWS["superadmin:users"] = async (main) => {
   main.innerHTML = `
-    <div class="page-head">
-      <div class="eyebrow">USER MANAGEMENT</div>
-      <h2>Watumiaji wa Mfumo</h2>
-      <p>
-        Ongeza au futa akaunti za watumiaji wa mfumo.
-        Kila akaunti mpya lazima iwe na saini yake.
-      </p>
-    </div>
-
+    <div class="page-head"><div class="eyebrow">USER MANAGEMENT</div><h2>Watumiaji wa Mfumo</h2><p>Ongeza au futa akaunti za watumiaji wa mfumo. Kila akaunti mpya lazima iwe na saini yake.</p></div>
     <div class="card">
       <h3>Ongeza Mtumiaji Mpya</h3>
-
       <div class="grid2">
-        <div class="field">
-          <label>Jina</label>
-          <input type="text" id="nu_name">
-        </div>
-
-        <div class="field">
-          <label>Barua Pepe</label>
-          <input type="email" id="nu_email">
-        </div>
+        <div class="field"><label>Jina</label><input type="text" id="nu_name"></div>
+        <div class="field"><label>Barua Pepe</label><input type="email" id="nu_email"></div>
       </div>
-
       <div class="grid2">
-        <div class="field">
-          <label>Role</label>
-          <select id="nu_role">
-            ${ADMIN_ROLES.map(
-              (r) =>
-                `<option value="${r.id}">${r.label}</option>`
-            ).join("")}
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Password ya Awali</label>
-          <input
-            type="password"
-            id="nu_password"
-            placeholder="herufi 8+, namba moja"
-          >
-        </div>
+        <div class="field"><label>Role</label><select id="nu_role">${ADMIN_ROLES.map(r => `<option value="${r.id}">${r.label}</option>`).join("")}</select></div>
+        <div class="field"><label>Password ya Awali</label><input type="password" id="nu_password" placeholder="herufi 8+, namba moja"></div>
       </div>
+     <div class="field">
+  <label>Saini ya Mtumiaji</label>
 
-      <div class="field">
-        <label>Saini ya Mtumiaji</label>
+  <div id="nu_sigmount"></div>
 
-        <div id="nu_sigmount"></div>
+  <div class="signature-option-label">
+    Au pakia picha ya signature
+  </div>
 
-        <div class="signature-option-label">
-          Au pakia picha ya signature
-        </div>
-
-        <div id="nu_sigupload"></div>
-      </div>
-
-      <button class="btn btn-teal" id="addUserBtn">
-        Ongeza Mtumiaji
-      </button>
+  <div id="nu_sigupload"></div>
+</div>
+      <button class="btn btn-teal" id="addUserBtn">Ongeza Mtumiaji</button>
     </div>
-
-    <div class="card">
-      <h3>Orodha ya Watumiaji</h3>
-      <div id="userTable" class="empty">
-        Inapakia…
-      </div>
-    </div>
+    <div class="card"><h3>Orodha ya Watumiaji</h3><div id="userTable" class="empty">Inapakia…</div></div>
   `;
+let sig = null;
 
-  let sig = null;
+mountSignaturePad(document.getElementById("nu_sigmount"), (d) => {
+  sig = d;
+});
 
-  mountSignaturePad(
-    document.getElementById("nu_sigmount"),
-    (dataUrl) => {
-      sig = dataUrl;
-    }
-  );
-
-  mountSignatureUpload(
-    document.getElementById("nu_sigupload"),
-    (dataUrl) => {
-      sig = dataUrl;
-    }
-  );
-
+mountSignatureUpload(document.getElementById("nu_sigupload"), (dataUrl) => {
+  sig = dataUrl;
+});
   document.getElementById("addUserBtn").onclick = async () => {
-    if (!sig) {
-      toast(
-        "Chora au pakia picha ya signature ya mtumiaji kwanza."
-      );
-      return;
-    }
-
-    const name = document
-      .getElementById("nu_name")
-      .value
-      .trim();
-
-    const email = document
-      .getElementById("nu_email")
-      .value
-      .trim();
-
-    const role = document
-      .getElementById("nu_role")
-      .value;
-
-    const password = document
-      .getElementById("nu_password")
-      .value;
-
-    if (!name || !email || !password) {
-      toast("Jaza jina, barua pepe na password kwanza.");
-      return;
-    }
-
+    if (!sig) { toast("Chora saini ya mtumiaji kwanza."); return; }
     try {
-      await api("/users", {
-        method: "POST",
-        body: {
-          name,
-          email,
-          role,
-          password,
-          signature: sig,
-        },
-      });
-
+      await api("/users", { method: "POST", body: {
+        name: document.getElementById("nu_name").value.trim(),
+        email: document.getElementById("nu_email").value.trim(),
+        role: document.getElementById("nu_role").value,
+        password: document.getElementById("nu_password").value,
+        signature: sig,
+      }});
       toast("Mtumiaji ameongezwa.");
-
       renderMain();
-    } catch (e) {
-      toast(e.message);
-    }
+    } catch (e) { toast(e.message); }
   };
-
   const { users } = await api("/users");
-
   const t = document.getElementById("userTable");
-
   t.className = "";
-
-  t.innerHTML = `
-    <table>
-      <tr>
-        <th>Jina</th>
-        <th>Barua Pepe</th>
-        <th>Role</th>
-        <th></th>
-      </tr>
-
-      ${users
-        .map(
-          (u) => `
-            <tr>
-              <td>${escapeHtml(u.name)}</td>
-              <td class="mono">
-                ${escapeHtml(u.email)}
-              </td>
-              <td class="mono">
-                ${ROLE_LABEL[u.role] || u.role}
-              </td>
-              <td>
-                <a
-                  href="#"
-                  class="delUser"
-                  data-id="${u.id}"
-                  style="
-                    color:var(--red);
-                    text-decoration:none;
-                    font-size:12.5px;
-                    font-weight:600;
-                  "
-                >
-                  Futa
-                </a>
-              </td>
-            </tr>
-          `
-        )
-        .join("")}
-    </table>
-  `;
-
-  t.querySelectorAll(".delUser").forEach((a) => {
+  t.innerHTML = `<table><tr><th>Jina</th><th>Barua Pepe</th><th>Role</th><th></th></tr>
+    ${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td class="mono">${escapeHtml(u.email)}</td><td class="mono">${ROLE_LABEL[u.role] || u.role}</td>
+      <td><a href="#" class="delUser" data-id="${u.id}" style="color:var(--red); text-decoration:none; font-size:12.5px; font-weight:600;">Futa</a></td></tr>`).join("")}
+  </table>`;
+  t.querySelectorAll(".delUser").forEach(a => {
     a.onclick = async (e) => {
       e.preventDefault();
-
-      if (
-        !confirm(
-          "Una uhakika unataka kumfuta mtumiaji huyu?"
-        )
-      ) {
-        return;
-      }
-
-      try {
-        await api(`/users/${a.dataset.id}`, {
-          method: "DELETE",
-        });
-
-        toast("Mtumiaji amefutwa.");
-
-        renderMain();
-      } catch (err) {
-        toast(err.message);
-      }
+      if (!confirm("Una uhakika unataka kumfuta mtumiaji huyu?")) return;
+      try { await api(`/users/${a.dataset.id}`, { method: "DELETE" }); toast("Mtumiaji amefutwa."); renderMain(); }
+      catch (err) { toast(err.message); }
     };
   });
 };
+
 VIEWS["superadmin:audit"] = async (main) => {
   const { audit } = await api("/audit");
   main.innerHTML = `
