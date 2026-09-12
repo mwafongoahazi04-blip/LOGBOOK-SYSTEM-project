@@ -6,9 +6,10 @@ CREATE TABLE IF NOT EXISTS users (
   email           TEXT NOT NULL UNIQUE,
   password_hash   TEXT NOT NULL,
   role            TEXT NOT NULL CHECK (role IN ('student','industrial','university','faculty','superadmin')),
-  signature       TEXT NOT NULL,           -- base64 PNG data URL saved at registration
+  signature       TEXT NOT NULL,
   failed_attempts INTEGER NOT NULL DEFAULT 0,
   locked_until    TIMESTAMPTZ,
+  active_session_id TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
